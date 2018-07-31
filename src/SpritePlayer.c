@@ -97,6 +97,7 @@ struct MovementData
 	MovementType mov_type;
 	INT8 xstep;
 	INT8 ystep;
+	INT8 updated;
 };
 
 typedef struct MovementData MovementData;
@@ -110,7 +111,7 @@ UINT8 num_bars = 8;
 
 UINT8 power_times[8] = {1,8,8,8,4,4,2,2};
 UINT8 powers[8] = { 2, 2, 1, 1, 0, 0, 0, 0 };
-UINT8 deccs[8] = { 1, 1, 1, 2, 4, 8, 8, 8  };
+UINT8 deccs[8] = { 2, 2, 1, 1, 4, 8, 8, 8  };
 INT8 fill = 1;
 INT8 power_times_idx = 0;
 INT8 power_time = 0;
@@ -348,23 +349,30 @@ void updateVelocity( MovementData *movement )
 		DPRINT_POS(10, 0);
 		DPrintf("Acc: %i  ", acc );
 
-		if( power_times_idx < 1 )
+		if( power_times_idx == 0 && !acc && !movement->updated )
 		{
-			power_times_idx++;
+			decc_count = decc_count >> 1;
 		}
-
-		if( acc && power_times_idx < 2 )
+		else
 		{
-			power_times_idx++;
-		}
+			if( acc && power_times_idx < 2 )
+			{
+				power_times_idx++;
+			}
+			else if( power_times_idx == 0 )
+			{
+				decc_count = decc_step;
+			}
 
-		calculateMovementData( movement->speed_x, movement->speed_y, movement );
+			calculateMovementData( movement->speed_x, movement->speed_y, movement );
+		}
 	}
 	else
 	{
 		DPRINT_POS(10, 0);
 		DPrintf("No Acc " );
 	}
+	movement->updated = updateVel;
 }
 
 /*
@@ -455,6 +463,8 @@ void cleanMovementData( MovementData* movement )
 {
 	movement->acc = 0;
 	movement->acc_error = 0;	
+	movement->updated = 0;
+	movement->updated = 0;
 }
 
 void move( MovementData* movement )
